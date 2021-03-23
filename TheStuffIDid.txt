@@ -1,0 +1,10 @@
+Hello Ill be keeping track of what ive done to this app here in this txt file. this will be mostly for me rather than others but I will
+include it as part of the repository anyways. I will be commenting in green throughout the app as I learn about how it works.
+thank you ! 
+
+
+
+
+Step 1 : Lets learn about how the app works the docs tell me to go take a peep at models.py 
+this step for me will be going through the existing code and commenting out all the logic so all working parts 
+are explained properly 

@@ -13,8 +13,10 @@ class Follows(db.Model):
     """Connection of a follower <-> followed_user."""
 
     __tablename__ = 'follows'
-
-    user_being_followed_id = db.Column(
+#two primary foreign key that are the same but why?
+#simple. TO keep track of both the users that follow and the ones being followed 
+#this is done so that there can be overlap as in a person can be followed and follow the same user
+    user_being_followed_id = db.Column( 
         db.Integer,
         db.ForeignKey('users.id', ondelete="cascade"),
         primary_key=True,
@@ -35,6 +37,7 @@ class Likes(db.Model):
     id = db.Column(
         db.Integer,
         primary_key=True
+        
     )
 
     user_id = db.Column(
