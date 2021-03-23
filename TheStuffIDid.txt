@@ -8,3 +8,6 @@ thank you !
 Step 1 : Lets learn about how the app works the docs tell me to go take a peep at models.py 
 this step for me will be going through the existing code and commenting out all the logic so all working parts 
 are explained properly 
+
+- Added autoincrement to all primary keys in models.py (there were indication that that code was removed prior)
+- All notes needed added to models.py 
