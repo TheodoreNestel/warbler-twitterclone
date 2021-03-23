@@ -146,23 +146,23 @@ class User(db.Model):
         return len(found_user_list) == 1
 
     @classmethod
-    def signup(cls, username, email, password, image_url):
+    def signup(cls, username, email, password, image_url): # a method for signing up users wowow
         """Sign up user.
 
         Hashes password and adds user to system.
         """
 
-        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
+        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8') #we grab their password input and hash it 
 
-        user = User(
+        user = User( #then we grab the info passed in and slap it into a new User object 
             username=username,
             email=email,
             password=hashed_pwd,
-            image_url=image_url,
+            image_url=image_url, 
         )
 
-        db.session.add(user)
-        return user
+        db.session.add(user) #add if to our db.session
+        return user #then we return the user back to app.py 
 
     @classmethod
     #wowow the bigbois this is the method used to let a user into their account if they provide the correct login details
