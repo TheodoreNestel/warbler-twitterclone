@@ -80,7 +80,7 @@ class User(db.Model):
     )
 ######################## Both are given a base image to show incase the user's doesnt work or they dont set one up 
     #users are offered the option to give us links to images to display on their profile this is stored here 
-    image_url = db.Column(
+    image_url = db.Column( #this is the pfp
         db.Text,
         default="/static/images/default-pic.png",
     )

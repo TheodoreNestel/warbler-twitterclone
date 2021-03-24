@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g #
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm,UserDetailForm
 from models import db, connect_db, User, Message
 
 CURR_USER_KEY = "curr_user" #this is the value our session will hold to see if a user is logged in or not
@@ -67,7 +67,7 @@ def do_logout():
         del session[CURR_USER_KEY]
 
 
-@app.route('/signup', methods=["GET", "POST"])
+@app.route('/signup', methods=["GET", "POST"]) #TODO add functionality to add bio loc and pic 
 def signup():
     """Handle user signup.
 
@@ -126,9 +126,9 @@ def login():
 
 
 @app.route('/logout')
-def logout(): #this might not work but 
+def logout(): #
     """Handle logout of user."""
-    # IMPLEMENT THIS
+    
     
     session.pop(CURR_USER_KEY) #if they click the log out button they come to this route where we then pop the curr_user_key session cookie
     flash("Goodbye!", "info") #we tell the user bye 
@@ -244,9 +244,45 @@ def stop_following(follow_id): #this route uses the same logic as above but to r
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
 
-    # IMPLEMENT THIS #TODO: add a form for the fields that can be / need to be modified check the edit.html for what it wants 
-    return render_template("users/edit.html")
+    form = UserDetailForm()
+
+    if form.validate_on_submit():
+        password = form.password.data
+        user = User.authenticate(g.user.username, password)
+        bio = form.bio.data
+        loc = form.loc.data
+        backimg = form.backimg.data
+        pfp = form.pfp.data
+        email = form.email.data
+        new_username = form.new_username.data
+        if user :
+            user.bio = bio
+            user.location = loc
+            user.header_image_url = backimg
+            user.username = new_username
+            user.email = email
+            user.image_url = pfp
+
+            db.session.add(user)
+            db.session.commit()
+            return redirect(f"/users/{g.user.id}")
+        else: 
+            flash("Access unauthorized.", "danger")
+        return redirect("/")
+    else : 
+        return render_template("users/edit.html",form=form)
+        
+
+        
+
+ 
+
+    
+    
 
 
 @app.route('/users/delete', methods=["POST"])
@@ -325,13 +361,17 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of followed_users
     """
+    user = User.query.get_or_404(g.user.id)
 
-    if g.user: #if the user is logged in they get a different page with massages and their account stuff to the left 
-        messages = (Message
-                    .query
-                    .order_by(Message.timestamp.desc())
-                    .limit(100)
-                    .all()) #query for messages to display on a logged in users home page but capped at 100 
+    
+    if g.user: #**Don
+
+        following_ids = [f.id for f in g.user.following] + [g.user.id] #this here grabs all the id of people you follow
+        #and puts them in a list and then adds your id on top so you can see your messages as well
+
+        messages = (Message.query.filter(Message.user_id.in_(following_ids)).order_by(Message.timestamp.desc()).limit(100).all())
+        #then here we check through all messsages using .in_ to see if they have any of our following id if they do we want them
+                    
 
         return render_template('home.html', messages=messages) #render that home template brooooo 
 

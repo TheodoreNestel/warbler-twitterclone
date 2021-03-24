@@ -11,3 +11,7 @@ are explained properly
 
 - Added autoincrement to all primary keys in models.py (there were indication that that code was removed prior)
 - All notes needed added to models.py 
+- Added edit bio / background img / location edit and display on users page 
+- Added bio to all cards , index.html , following.html , follower,html 
+- Added further modification to the edit feature , profile picture , email , username 
+- Added functionality for password checking to commit changes
