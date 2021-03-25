@@ -6,7 +6,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm,UserDetailForm
-from models import db, connect_db, User, Message
+from models import Likes, db, connect_db, User, Message
 
 CURR_USER_KEY = "curr_user" #this is the value our session will hold to see if a user is logged in or not
 #it starts with a dummy value as to not break our code that relies on the token existing
@@ -376,7 +376,72 @@ def homepage():
         return render_template('home.html', messages=messages) #render that home template brooooo 
 
     else:
-        return render_template('home-anon.html') #otherwise send them to the unlogged in user homepage 
+        return render_template('home-anon.html') #otherwise send them to the unlogged in user homepage
+
+
+
+
+
+#############################
+#like routes 
+
+
+
+@app.route('/users/add_like/<int:message_id>', methods=["POST"])
+def add_like(message_id):
+
+    #for this to work we need to create a new like which needs two pieces 
+    #the id for the message being liked and who liked it 
+    #we then will rely on relationships to grab the author based on the message id 
+
+
+    #TODO add logic for unliking a tweet 
+
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+
+    msg = Message.query.get_or_404(message_id) #we grab the message that was liked to make sure it exists 
+    
+    user_id = g.user.id #we dont need this but helps my brain understand whats going on
+    user = User.query.get_or_404(g.user.id) 
+    try:
+        new_like = Likes(user_id=user_id,message_id=message_id) #to create the new like need g.user's id and also the id of the message they like which 
+    #we grabbed using the like button 
+        db.session.add(new_like)
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+
+        liked_messages = [m.id for m in user.likes]
+
+        delete_warble = Likes.query.filter(Likes.message_id == message_id)
+        db.session.delete(delete_warble)
+        db.session.commit()
+        return redirect(f"/users/{g.user.id}/Likes")
+        
+
+    
+    
+    return  redirect(f"/users/{g.user.id}/Likes")
+
+
+@app.route('/users/<int:user_id>/Likes') 
+def show_warbles(user_id):
+
+    
+
+    user = User.query.get_or_404(user_id) #we need to grab the User object based on the id to get the logic below to work 
+    users = User.query.all()
+
+    likes_messages_id = [m.id for m in user.likes] #grabs all the message id that are liked by g.user
+
+    liked_messsages = Message.query.filter(Message.id.in_(likes_messages_id)).order_by(Message.id.desc()).all()
+
+    
+    return render_template("users/show_warbles.html", messages=liked_messsages , users=users,user=user) #TODO make the template pretty 
 
 
 ##############################################################################
@@ -395,3 +460,6 @@ def add_header(req):
     req.headers["Expires"] = "0"
     req.headers['Cache-Control'] = 'public, max-age=0'
     return req
+
+
+

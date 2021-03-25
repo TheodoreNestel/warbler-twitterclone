@@ -15,3 +15,12 @@ are explained properly
 - Added bio to all cards , index.html , following.html , follower,html 
 - Added further modification to the edit feature , profile picture , email , username 
 - Added functionality for password checking to commit changes
+
+Step 2 adding like functionality 
+
+- Added coppied code from home.html which contained the logic for adding like buttons with forms attached 
+- Added the copied code to show.html so all messages now have a like button
+- Added a Post route in app.py that Currently just prints the message when the like button is clicked 
+- Added logic for liking a tweet and storing the like in our db 
+- Added Logic to pull all of a user's liked tweet from the database 
+- Added New route on profile page that displays all liked tweets in order 
