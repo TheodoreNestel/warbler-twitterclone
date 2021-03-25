@@ -26,6 +26,14 @@ toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
 
+def find_like(likes,id): #small methods to sort through likes 
+    for l in likes:
+        if l.id == id:
+             return l 
+
+       
+
+
 
 ##############################################################################
 # User signup/login/logout
@@ -145,14 +153,16 @@ def list_users():
     Can take a 'q' param in querystring to search by that username.
     """
 
-    search = request.args.get('q') #if you pass in a username as a query string it will return the user you searched for 
+    search = request.args.get('q') #if you pass in a username as a query string it will return the user you searched for
+    
+    likes_messages_id = [m.id for m in g.user.likes]
 
     if not search: #if we didnt specify a user then get all of them 
         users = User.query.all() 
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all() #if we did search return taht particular user 
 
-    return render_template('users/index.html', users=users)#then either way render either one user or all of them on this template
+    return render_template('users/index.html', users=users,likes=likes_messages_id)#then either way render either one user or all of them on this template
 
 
 @app.route('/users/<int:user_id>') #shows the user's page by using anchortags
@@ -169,7 +179,8 @@ def users_show(user_id): #from the anchor tag we get a user_id
                 .order_by(Message.timestamp.desc())
                 .limit(100)
                 .all()) #filter the messages the user wrote and sorts them by descending order 
-    return render_template('users/show.html', user=user, messages=messages) #then show the template users being the folder its in
+    likes_messages_id = [m.id for m in g.user.likes]
+    return render_template('users/show.html', user=user, messages=messages, likes=likes_messages_id) #then show the template users being the folder its in
     #this is done because the user folder uses a different base template to extend from  
 
 
@@ -250,6 +261,9 @@ def profile():
 
     form = UserDetailForm()
 
+    likes_messages_id = [m.id for m in g.user.likes]
+    
+
     if form.validate_on_submit():
         password = form.password.data
         user = User.authenticate(g.user.username, password)
@@ -269,7 +283,7 @@ def profile():
 
             db.session.add(user)
             db.session.commit()
-            return redirect(f"/users/{g.user.id}")
+            return redirect(f"/users/{g.user.id}",likes_messages_id)
         else: 
             flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -332,7 +346,9 @@ def messages_show(message_id): #if I click on the message then it gets its own h
     """Show a message."""
 
     msg = Message.query.get(message_id) #query for the right message with its unique id 
-    return render_template('messages/show.html', message=msg) #load up an html with that message 
+    likes_messages_id = [m.id for m in g.user.likes]
+    
+    return render_template('messages/show.html', message=msg,likes=likes_messages_id) #load up an html with that message 
 
 
 @app.route('/messages/<int:message_id>/delete', methods=["POST"])
@@ -362,6 +378,7 @@ def homepage():
     - logged in: 100 most recent messages of followed_users
     """
     user = User.query.get_or_404(g.user.id)
+    likes_messages_id = [m.id for m in user.likes]
 
     
     if g.user: #**Don
@@ -369,11 +386,11 @@ def homepage():
         following_ids = [f.id for f in g.user.following] + [g.user.id] #this here grabs all the id of people you follow
         #and puts them in a list and then adds your id on top so you can see your messages as well
 
-        messages = (Message.query.filter(Message.user_id.in_(following_ids)).order_by(Message.timestamp.desc()).limit(100).all())
+        messages = (Message.query.filter(Message.user_id.in_(following_ids)).order_by(Message.timestamp.desc()).all())
         #then here we check through all messsages using .in_ to see if they have any of our following id if they do we want them
                     
 
-        return render_template('home.html', messages=messages) #render that home template brooooo 
+        return render_template('home.html', messages=messages,likes=likes_messages_id) #render that home template brooooo 
 
     else:
         return render_template('home-anon.html') #otherwise send them to the unlogged in user homepage
@@ -408,16 +425,25 @@ def add_like(message_id):
     user_id = g.user.id #we dont need this but helps my brain understand whats going on
     user = User.query.get_or_404(g.user.id) 
     try:
+        if g.user.id == msg.user.id:
+            flash("You cannot favorite your own Warble")
+            return redirect("/")
         new_like = Likes(user_id=user_id,message_id=message_id) #to create the new like need g.user's id and also the id of the message they like which 
     #we grabbed using the like button 
         db.session.add(new_like)
         db.session.commit()
     except IntegrityError:
+        if g.user.id == msg.user.id:
+            flash("You cannot favorite your own Warble")
+            return redirect("/")
         db.session.rollback()
+        
 
-        liked_messages = [m.id for m in user.likes]
+        delete_warble = find_like(user.likes,message_id)
 
-        delete_warble = Likes.query.filter(Likes.message_id == message_id)
+        # liked_messages = [m.message_id for m in user.likes]
+
+        # delete_warble = Likes.query.filter(Likes.message_id.in_
         db.session.delete(delete_warble)
         db.session.commit()
         return redirect(f"/users/{g.user.id}/Likes")
@@ -441,7 +467,9 @@ def show_warbles(user_id):
     liked_messsages = Message.query.filter(Message.id.in_(likes_messages_id)).order_by(Message.id.desc()).all()
 
     
-    return render_template("users/show_warbles.html", messages=liked_messsages , users=users,user=user) #TODO make the template pretty 
+
+    
+    return render_template("users/show_warbles.html", messages=liked_messsages , users=users,user=user,likes=likes_messages_id) #TODO make the template pretty 
 
 
 ##############################################################################

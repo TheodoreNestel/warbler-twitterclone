@@ -24,3 +24,7 @@ Step 2 adding like functionality
 - Added logic for liking a tweet and storing the like in our db 
 - Added Logic to pull all of a user's liked tweet from the database 
 - Added New route on profile page that displays all liked tweets in order 
+- Added a new function that grabs a single liked tweet based on message Id and the likes inside g.user
+- Added Blue and Black thumbs up based on the status of a message if likes by the current logged in user they're blue otherwise theyre grey
+- Added tweet unlike functionality 
+- Added prevention so User's cannot favourite their own tweets 
